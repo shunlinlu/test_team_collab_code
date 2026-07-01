@@ -2,7 +2,7 @@
 """Minimal data-acquisition (数采) demo.
 
 Periodically samples host load average and appends each reading to a CSV file.
-Standard library only; runs on macOS and Linux.
+Standard library only; falls back to zeros when load averages are unavailable.
 """
 from __future__ import annotations
 
@@ -16,9 +16,20 @@ from pathlib import Path
 FIELDS = ["timestamp", "load1", "load5", "load15"]
 
 
+def load_average() -> tuple[float, float, float]:
+    """Return host load averages, or zeros on platforms without support."""
+    getloadavg = getattr(os, "getloadavg", None)
+    if getloadavg is None:
+        return 0.0, 0.0, 0.0
+    try:
+        return getloadavg()
+    except OSError:
+        return 0.0, 0.0, 0.0
+
+
 def sample() -> dict:
     """Take one reading of the host's 1/5/15-minute load averages."""
-    load1, load5, load15 = os.getloadavg()
+    load1, load5, load15 = load_average()
     return {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "load1": round(load1, 3),
@@ -31,7 +42,7 @@ def append_row(path: Path, row: dict) -> None:
     """Append one row to the CSV at `path`, writing a header if the file is new."""
     path.parent.mkdir(parents=True, exist_ok=True)
     is_new = not path.exists()
-    with path.open("a", newline="") as f:
+    with path.open("a", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=FIELDS)
         if is_new:
             writer.writeheader()

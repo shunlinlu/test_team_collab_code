@@ -6,7 +6,8 @@ data-acquisition (数采) demo.
 ## Data-acquisition demo
 
 `collector/collect.py` periodically samples the host's load average and appends
-each reading to a CSV. Standard library only (macOS/Linux).
+each reading to a CSV. Standard library only. On Windows or other platforms
+without load averages, the load columns fall back to `0.0`.
 
 ```bash
 # take 5 samples, 1s apart, into data/samples.csv
