@@ -2,3 +2,6 @@ obsidian-docs/
 /obsidian-docs
 .claude/
 .codex/
+__pycache__/
+*.pyc
+data/
